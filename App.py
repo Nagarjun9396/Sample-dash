@@ -12,7 +12,7 @@ data = {
 }
 df = pd.DataFrame(data)
 
-st.title('Interactive Sales Dashboard By Nagarjuna')
+st.title('Interactive Sales Dashboard By Naga')
 
 # Sidebar for user input
 st.sidebar.header('User Input')
