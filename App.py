@@ -79,4 +79,5 @@ filtered_df = df[
 ]
 
 # Display filtered DataFrame
-st.write("### Filtered Data", filtered_df)
+with st.expander('Data', expanded= False):
+  st.write("### Filtered Data", filtered_df)
