@@ -1,44 +1,82 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 
-# Sample data
-np.random.seed(42)
+# Sample DataFrame
 data = {
-    'Date': pd.date_range(start='2024-01-01', periods=100),
-    'Sales': np.random.randint(100, 500, size=100),
-    'Location': np.random.choice(['North', 'South', 'East', 'West'], size=100)
+    'Sales Rep': ['Alice', 'Bob', 'Charlie', 'David', 'Edward'],
+    'Location': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
+    'Sales': [1500, 2000, 1700, 1200, 2300]
 }
+
 df = pd.DataFrame(data)
 
-st.title('Interactive Sales Dashboard By Naga')
+# Sidebar filters
+st.sidebar.header('Filter options')
 
-# Sidebar for user input
-st.sidebar.header('User Input')
+# Collapsible Sales Rep Filter
+with st.sidebar.expander('Sales Rep', expanded=False):
+    all_sales_reps = df['Sales Rep'].unique().tolist()
+    selected_sales_reps = []
+    select_all_sales_reps = st.checkbox('Select All Sales Reps', value=True)
 
-locations = df['Location'].unique()
-selected_location = st.sidebar.selectbox('Select Location', locations)
+    if select_all_sales_reps:
+        selected_sales_reps = all_sales_reps
+    else:
+        for sales_rep in all_sales_reps:
+            if st.checkbox(sales_rep, value=False):
+                selected_sales_reps.append(sales_rep)
 
-# Filter data based on user input
-filtered_df = df[df['Location'] == selected_location]
+# Collapsible Location Filter
+with st.sidebar.expander('Location', expanded=False):
+    all_locations = df['Location'].unique().tolist()
+    selected_locations = []
+    select_all_locations = st.checkbox('Select All Locations', value=True)
 
-# Display data
-st.subheader(f'Sales Data for {selected_location}')
-st.write(filtered_df)
+    if select_all_locations:
+        selected_locations = all_locations
+    else:
+        for location in all_locations:
+            if st.checkbox(location, value=False):
+                selected_locations.append(location)
 
-# Plotting
-st.subheader('Sales Trend')
-fig, ax = plt.subplots()
-ax.plot(filtered_df['Date'], filtered_df['Sales'], marker='o', linestyle='-')
-ax.set_xlabel('Date')
-ax.set_ylabel('Sales')
-ax.set_title(f'Sales Trend for {selected_location}')
-st.pyplot(fig)
+use_slider = st.sidebar.checkbox('Use Sales Range Slider')
 
-# Display statistics
-st.subheader('Statistics')
-st.write(f"**Total Sales**: {filtered_df['Sales'].sum()}")
-st.write(f"**Average Sales**: {filtered_df['Sales'].mean()}")
-st.write(f"**Maximum Sales**: {filtered_df['Sales'].max()}")
-st.write(f"**Minimum Sales**: {filtered_df['Sales'].min()}")
+if use_slider:
+    sales_range = st.sidebar.slider(
+        'Select Sales Range:',
+        min_value=int(df['Sales'].min()),
+        max_value=int(df['Sales'].max()),
+        value=(int(df['Sales'].min()), int(df['Sales'].max()))
+    )
+    min_sales, max_sales = sales_range
+else:
+    # Number inputs for manual min and max values
+    min_sales = st.sidebar.number_input(
+        'Enter Minimum Sales:',
+        min_value=int(df['Sales'].min()),
+        max_value=int(df['Sales'].max()),
+        value=int(df['Sales'].min())
+    )
+
+    max_sales = st.sidebar.number_input(
+        'Enter Maximum Sales:',
+        min_value=int(df['Sales'].min()),
+        max_value=int(df['Sales'].max()),
+        value=int(df['Sales'].max())
+    )
+
+# Ensure that the min_sales is always less than or equal to max_sales
+if min_sales > max_sales:
+    st.sidebar.error("Minimum sales cannot be greater than maximum sales.")
+
+
+
+# Apply filters to the DataFrame
+filtered_df = df[
+    (df['Sales Rep'].isin(selected_sales_reps)) &
+    (df['Location'].isin(selected_locations)) &
+    (df['Sales'].between(min_sales,max_sales))
+]
+
+# Display filtered DataFrame
+st.write("### Filtered Data", filtered_df)
